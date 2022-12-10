@@ -3,13 +3,9 @@ package com.lolsearcher.persistance.failmatchids.model.entity.match;
 import com.lolsearcher.persistance.failmatchids.model.dto.riot.match.perk.PerkStatsDto;
 import lombok.Data;
 
-import javax.persistence.*;
 
 @Data
-@Entity
 public class PerkStats {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private Short defense;

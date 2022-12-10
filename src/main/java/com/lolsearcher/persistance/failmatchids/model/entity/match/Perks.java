@@ -1,31 +1,17 @@
 package com.lolsearcher.persistance.failmatchids.model.entity.match;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.lolsearcher.persistance.failmatchids.model.dto.riot.match.perk.PerksDto;
 import lombok.Data;
 
-import javax.persistence.*;
 
 @Data
-@Entity
 public class Perks {
-    @EmbeddedId
     MemberCompKey memberCompKey;
 
-    @Column(name = "PERK_STATS_ID")
     private int perkStatsId;
 
-    @ManyToOne
-    @JoinColumn(name = "PERK_STATS_ID", referencedColumnName = "ID", insertable = false, updatable = false)
     private PerkStats perkStats;
 
-    @JsonBackReference
-    @OneToOne
-    @MapsId
-    @JoinColumns({
-            @JoinColumn(name = "MATCH_ID", referencedColumnName = "MATCH_ID"),
-            @JoinColumn(name = "NUM", referencedColumnName = "NUM")
-    })
     private Member member;
 
     private short mainPerkStyle;

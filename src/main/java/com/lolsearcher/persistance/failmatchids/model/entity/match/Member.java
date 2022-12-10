@@ -1,30 +1,17 @@
 package com.lolsearcher.persistance.failmatchids.model.entity.match;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.lolsearcher.persistance.failmatchids.model.dto.riot.match.ParticipantDto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-
 @NoArgsConstructor
 @Data
-@Entity
-@Table(name = "MEMBERS",indexes = @Index(columnList = "summonerId"))
 public class Member {
-	
-	@EmbeddedId
+
 	private MemberCompKey ck;
 
-	@JsonBackReference
-	@MapsId("matchId")
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "MATCH_ID", referencedColumnName = "ID")
 	private Match match;
 
-	@JsonManagedReference
-	@OneToOne(mappedBy = "member", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private Perks perks;
 
 	private Short assists;
