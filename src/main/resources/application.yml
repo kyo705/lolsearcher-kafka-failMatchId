@@ -1,0 +1,22 @@
+app:
+  kafka:
+    zookeeper:
+      clusters:
+        - lolsearcher:
+            controller:
+              server: localhost:9092
+            brokers:
+                - broker1:
+                    server: localhost:9092
+    topics:
+      - filtered_fail_match:
+          name: filtered_fail_match_id
+      - success_match:
+          name: success_match
+    consumers:
+      - filtered_fail_match:
+          group_id: filtered_fail_match_id_group
+          concurrency: 10
+          container_factory: failMatchIdsContainerFactory
+  riot_games:
+    token_key: ${api_key}
