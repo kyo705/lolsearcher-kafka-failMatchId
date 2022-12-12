@@ -6,15 +6,18 @@ import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMa
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @RequiredArgsConstructor
 @Service
 public class FailMatchIdConsumerService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final RiotGamesApiService riotGamesApiService;
     private final SuccessMatchProducerService successMatchProducerService;
@@ -27,20 +30,29 @@ public class FailMatchIdConsumerService {
             groupId = "${app.kafka.consumers.filtered_fail_match.group_id}",
             containerFactory = "${app.kafka.consumers.filtered_fail_match.container_factory}"
     )
-    public void processFailMatchIds(ConsumerRecords<String, String> failMatchIdRecords) {
-        List<String> failMatchIds = getFailMatchIds(failMatchIdRecords);
-
-        List<Match> successMatches = riotGamesApiService.requestMatches(failMatchIds);
-
-        successMatchProducerService.send(successMatches);
-    }
-
-    private List<String> getFailMatchIds(ConsumerRecords<String, String> failMatchIdRecords) {
-        List<String> failMatchIds = new ArrayList<>(failMatchIdRecords.count());
+    public void processFailMatchIds(
+            ConsumerRecords<String, String> failMatchIdRecords,
+            Acknowledgment acknowledgment
+    ) {
 
         for(ConsumerRecord<String, String> failMatchIdRecord : failMatchIdRecords){
-            failMatchIds.add(failMatchIdRecord.value());
+            String failMatchId = failMatchIdRecord.value();
+            try{
+                Match successMatch = riotGamesApiService.requestMatch(failMatchId);
+
+                successMatchProducerService.send(successMatch);
+                acknowledgment.acknowledge();
+
+            }catch (WebClientResponseException e){
+                if(e.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS){
+                    throw e;
+                }
+                try {
+                    Thread.sleep(2*60*1000);
+                } catch (InterruptedException ex) {
+                    logger.error(ex.getMessage());
+                }
+            }
         }
-        return failMatchIds;
     }
 }
