@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class PerkStyleDto {
-	private final String description;
-	private final List<PerkStyleSelectionDto> selections;
-	private final short style;
+	private String description;
+	private List<PerkStyleSelectionDto> selections;
+	private short style;
 }

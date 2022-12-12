@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class PerkStyleSelectionDto {
-	private final short perk;
-	private final short var1;
-	private final short var2;
-	private final short var3;
+	private short perk;
+	private short var1;
+	private short var2;
+	private short var3;
 }
