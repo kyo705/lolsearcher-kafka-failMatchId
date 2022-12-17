@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class FailMatchKafkaConfig {
+public class FailMatchKafkaConsumerConfig {
     @Value("${app.kafka.zookeeper.cluster.lolsearcher.brokers.broker1.server}")
     private String BOOTSTRAP_SERVER;
     private static final Integer CONCURRENCY_COUNT = Runtime.getRuntime().availableProcessors();
