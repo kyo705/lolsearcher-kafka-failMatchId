@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class FailMatchIdConsumerService {
             groupId = "${app.kafka.consumers.filtered_fail_match.group_id}",
             containerFactory = "${app.kafka.consumers.filtered_fail_match.container_factory}"
     )
+    @Transactional
     public void processFailMatchIds(
             ConsumerRecords<String, String> failMatchIdRecords,
             Acknowledgment acknowledgment
@@ -40,7 +42,7 @@ public class FailMatchIdConsumerService {
             try{
                 Match successMatch = riotGamesApiService.requestMatch(failMatchId);
 
-                successMatchProducerService.send(successMatch);
+                successMatchProducerService.send(successMatch); //send 실패시 해당 서비스 트랜잭션 롤백
                 acknowledgment.acknowledge();
 
             }catch (WebClientResponseException e){
