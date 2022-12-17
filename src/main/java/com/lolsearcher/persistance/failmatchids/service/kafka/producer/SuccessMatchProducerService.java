@@ -38,6 +38,8 @@ public class SuccessMatchProducerService {
                     public void onFailure(KafkaProducerException ex) {
                         log.error("TOPIC_NAME : '{}'에 MATCH : '{}' 적재 실패",
                                 TOPIC_NAME, ((Match) ex.getFailedProducerRecord().value()).getMatchId());
+
+                        throw ex;
                     }
                 }
         );
