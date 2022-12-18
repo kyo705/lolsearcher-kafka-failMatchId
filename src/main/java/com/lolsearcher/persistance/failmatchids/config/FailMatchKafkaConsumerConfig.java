@@ -2,14 +2,11 @@ package com.lolsearcher.persistance.failmatchids.config;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.apache.kafka.common.IsolationLevel;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -23,12 +20,23 @@ import java.util.Map;
 
 @Configuration
 public class FailMatchKafkaConsumerConfig {
-    @Value("${app.kafka.zookeeper.cluster.lolsearcher.brokers.broker1.server}")
+
+    @Value("${app.kafka.zookeeper.clusters.lolsearcher.brokers.broker1.server}")
     private String BOOTSTRAP_SERVER;
-    private static final Integer CONCURRENCY_COUNT = Runtime.getRuntime().availableProcessors();
-    private static final Integer POLL_RECORDS_COUNT = 100; /* riot api 요청 제한 횟수가 2분당 최대 100회 */
-    private static final Integer HEARTBEAT_MS = 2000;
-    private static final Integer SESSION_TIME_OUT_MS = 2*60*1000 + 2000; /* 2min + heartbeat time */
+    private int CONCURRENCY_COUNT = Runtime.getRuntime().availableProcessors();
+    @Value("${app.kafka.consumers.filtered_fail_match.poll_record_size}")
+    private int POLL_RECORDS_COUNT; /* riot api 요청 제한 횟수가 2분당 최대 100회 */
+    @Value("${app.kafka.consumers.filtered_fail_match.heartbeat}")
+    private int HEARTBEAT_MS;
+    @Value("${app.kafka.consumers.filtered_fail_match.session_time_out}")
+    private int SESSION_TIME_OUT_MS; /* 2min + heartbeat time */
+    @Value("${app.kafka.consumers.filtered_fail_match.auto_offset_reset}")
+    private String AUTO_OFFSET_RESET;
+    @Value("${app.kafka.consumers.filtered_fail_match.isolation}")
+    private String ISOLATION_LEVEL;
+    @Value("${app.kafka.consumers.filtered_fail_match.enable_auto_commit}")
+    private boolean AUTO_OFFSET_COMMIT;
+
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> failMatchIdsContainerFactory(){
@@ -36,7 +44,7 @@ public class FailMatchKafkaConsumerConfig {
         Map<String, Object> properties = createConsumerProperties();
         DefaultKafkaConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(properties);
 
-        //컨슈머 리스너 팩토리 생성
+        //리스너컨테이너 팩토리 생성
         ConcurrentKafkaListenerContainerFactory<String, String> listenerFactory = new ConcurrentKafkaListenerContainerFactory<>();
 
         listenerFactory.setConsumerFactory(consumerFactory);
@@ -55,11 +63,11 @@ public class FailMatchKafkaConsumerConfig {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, POLL_RECORDS_COUNT);
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, OffsetResetStrategy.NONE);
-        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, IsolationLevel.READ_COMMITTED);
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, ISOLATION_LEVEL);
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, AUTO_OFFSET_COMMIT);
         properties.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, HEARTBEAT_MS);
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, SESSION_TIME_OUT_MS);
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AUTO_OFFSET_RESET);
 
         return properties;
     }
@@ -83,10 +91,7 @@ public class FailMatchKafkaConsumerConfig {
 
             @Override
             public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                //해당 컨슈머 그룹은 반드시 파티션과 컨슈머가 1:1 매핑되도록 설계
-                if(partitions.size() != 1){
-                    throw new IncorrectResultSizeDataAccessException(1);
-                }
+                //새롭게 할당받은 파티션
             }
         };
     }
