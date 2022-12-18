@@ -11,8 +11,12 @@ app:
     topics:
       filtered_fail_match:
         name: filtered_fail_match_id
+        replica: 1
+        partitions: 1
       success_match:
         name: success_match
+        replica: 1
+        partitions: 1
     producers:
       success_match:
         transaction_id: success_match
