@@ -1,4 +1,4 @@
-package com.lolsearcher.persistance.failmatchids.config;
+package com.lolsearcher.persistance.failmatchids.config.producer;
 
 import com.lolsearcher.persistance.failmatchids.model.entity.match.Match;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
 
@@ -32,12 +31,11 @@ public class SuccessMatchKafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, Match> successMatchTemplate(){
-        ProducerFactory<String, Match> producerFactory = getProducerFactory();
-
-        return new KafkaTemplate<>(producerFactory);
+        return new KafkaTemplate<>(getProducerFactory());
     }
 
-    private ProducerFactory<String, Match> getProducerFactory(){
+    @Bean
+    public DefaultKafkaProducerFactory<String, Match> getProducerFactory(){
         Map<String, Object> properties = new HashMap<>();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
