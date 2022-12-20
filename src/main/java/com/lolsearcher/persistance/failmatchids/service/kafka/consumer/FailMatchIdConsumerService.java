@@ -4,21 +4,20 @@ import com.lolsearcher.persistance.failmatchids.model.entity.match.Match;
 import com.lolsearcher.persistance.failmatchids.service.api.RiotGamesApiService;
 import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMatchProducerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class FailMatchIdConsumerService {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final RiotGamesApiService riotGamesApiService;
     private final SuccessMatchProducerService successMatchProducerService;
@@ -31,7 +30,6 @@ public class FailMatchIdConsumerService {
             groupId = "${app.kafka.consumers.filtered_fail_match.group_id}",
             containerFactory = "${app.kafka.consumers.filtered_fail_match.container_factory}"
     )
-    @Transactional
     public void processFailMatchIds(
             ConsumerRecords<String, String> failMatchIdRecords,
             Acknowledgment acknowledgment
@@ -42,7 +40,10 @@ public class FailMatchIdConsumerService {
             try{
                 Match successMatch = riotGamesApiService.requestMatch(failMatchId);
 
-                successMatchProducerService.send(successMatch); //send 실패시 해당 서비스 트랜잭션 롤백
+                ProducerRecord<String, Match> successMatchRecord
+                        = successMatchProducerService.createProducerRecord(successMatch);
+
+                successMatchProducerService.send(successMatchRecord); //send 실패시 해당 서비스 트랜잭션 롤백
                 acknowledgment.acknowledge();
 
             }catch (WebClientResponseException e){
@@ -52,8 +53,10 @@ public class FailMatchIdConsumerService {
                 try {
                     Thread.sleep(2*60*1000);
                 } catch (InterruptedException ex) {
-                    logger.error(ex.getMessage());
+                    log.error(ex.getMessage());
                 }
+            }catch (Exception e){
+                log.error(e.getMessage());
             }
         }
     }

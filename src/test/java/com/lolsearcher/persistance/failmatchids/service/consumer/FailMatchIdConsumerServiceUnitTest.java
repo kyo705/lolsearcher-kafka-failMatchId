@@ -12,6 +12,7 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.verify;
@@ -34,7 +35,7 @@ public class FailMatchIdConsumerServiceUnitTest {
 
     @DisplayName("@kafkaListener를 통해 토픽 내 레코드가 컨슈밍된다.")
     @Test
-    public void processFailMatchIdsTest(){
+    public void processFailMatchIdsTest() throws ExecutionException, InterruptedException {
         //given
         List<ProducerRecord<String, String>> producerRecords = FailMatchIdConsumerTestSetUp.getFailMatchIdRecord();
 
@@ -45,6 +46,9 @@ public class FailMatchIdConsumerServiceUnitTest {
             match.setMatchId(matchId);
 
             given(riotGamesApiService.requestMatch(matchId)).willReturn(match);
+
+            given(successMatchProducerService.createProducerRecord(match))
+                    .willReturn(new ProducerRecord<>("success_match", match));
         }
 
         //when
@@ -60,6 +64,6 @@ public class FailMatchIdConsumerServiceUnitTest {
         for(ProducerRecord<String, String> producerRecord : producerRecords){
             verify(riotGamesApiService, times(1)).requestMatch(producerRecord.value());
         }
-        verify(successMatchProducerService, times(producerRecords.size())).send(any(Match.class));
+        verify(successMatchProducerService, times(producerRecords.size())).send(any(ProducerRecord.class));
     }
 }
