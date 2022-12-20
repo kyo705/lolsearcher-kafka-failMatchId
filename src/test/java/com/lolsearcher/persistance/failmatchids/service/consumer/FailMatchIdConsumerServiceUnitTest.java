@@ -6,6 +6,7 @@ import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMa
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -23,7 +24,13 @@ import static org.mockito.Mockito.verify;
             "offsets.topic.replication.factor=1",
             "transaction.state.log.replication.factor=1",
             "transaction.state.log.min.isr=1"}
-        )
+)
+@EnableAutoConfiguration(
+        excludeName = {
+                "failMatchIdsTopic",
+                "successMatchesTopic"
+        }
+)
 @SpringBootTest
 @DirtiesContext
 public class FailMatchIdConsumerServiceUnitTest {
