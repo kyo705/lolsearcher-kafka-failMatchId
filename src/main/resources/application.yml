@@ -25,7 +25,6 @@ app:
       filtered_fail_match:
         container_factory: failMatchIdsContainerFactory
         group_id: filtered_fail_match_id_group
-        concurrency: #시스템 코어 갯수만큼 설정
         poll_record_size: 100  # riot api 요청 제한 횟수가 2분당 최대 100회
         heartbeat: 2000
         session_time_out: 122000 # 2min + heartbeat time

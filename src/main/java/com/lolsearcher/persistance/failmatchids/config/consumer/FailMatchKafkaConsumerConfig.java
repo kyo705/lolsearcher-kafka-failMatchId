@@ -1,4 +1,4 @@
-package com.lolsearcher.persistance.failmatchids.config;
+package com.lolsearcher.persistance.failmatchids.config.consumer;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -21,9 +21,12 @@ import java.util.Map;
 @Configuration
 public class FailMatchKafkaConsumerConfig {
 
+    //listenerContainerFactory 설정
+    private int CONCURRENCY_COUNT = Runtime.getRuntime().availableProcessors();
+
+    //ConsumerFactory 설정
     @Value("${app.kafka.zookeeper.clusters.lolsearcher.brokers.broker1.server}")
     private String BOOTSTRAP_SERVER;
-    private int CONCURRENCY_COUNT = Runtime.getRuntime().availableProcessors();
     @Value("${app.kafka.consumers.filtered_fail_match.poll_record_size}")
     private int POLL_RECORDS_COUNT; /* riot api 요청 제한 횟수가 2분당 최대 100회 */
     @Value("${app.kafka.consumers.filtered_fail_match.heartbeat}")
