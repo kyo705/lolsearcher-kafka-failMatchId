@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.verify;
 
-@EmbeddedKafka(partitions = 3,
+@EmbeddedKafka(
         brokerProperties = {
             "listeners=PLAINTEXT://localhost:9092",
             "offsets.topic.replication.factor=1",

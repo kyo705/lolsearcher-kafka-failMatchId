@@ -15,14 +15,15 @@ import java.util.Map;
 
 
 public class FailMatchIdConsumerTestSetUp {
+
     private static final String TOPIC_NAME = "filtered_fail_match_id";
+
     protected static List<ProducerRecord<String, String>> getFailMatchIdRecord() {
 
-
         return List.of(
-                new ProducerRecord<>(TOPIC_NAME, 0, null, "matchId1"),
-                new ProducerRecord<>(TOPIC_NAME, 2, null,"matchId2"),
-                new ProducerRecord<>(TOPIC_NAME, 1, null,"matchId3")
+                new ProducerRecord<>(TOPIC_NAME, "matchId1"),
+                new ProducerRecord<>(TOPIC_NAME,"matchId2"),
+                new ProducerRecord<>(TOPIC_NAME,"matchId3")
         );
     }
 
@@ -33,26 +34,21 @@ public class FailMatchIdConsumerTestSetUp {
         ProducerFactory<String, String> producerFactory = new DefaultKafkaProducerFactory<>(properties);
 
         KafkaTransactionManager<String, String> transactionManager = new KafkaTransactionManager<>(producerFactory);
-
         KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
 
         //트랜잭션 시작
         TransactionStatus transactionStatus = transactionManager.getTransaction(null);
         try{
-            sendRecords(kafkaTemplate, records);
+            for(ProducerRecord<String, String> record : records){
+                kafkaTemplate.send(record);
+            }
 
             //트랜잭션 종료
             transactionStatus.flush();
             transactionManager.commit(transactionStatus);
         }catch (Exception e){
             transactionManager.rollback(transactionStatus);
-        }
-    }
-
-    private static void sendRecords(KafkaTemplate<String, String> kafkaTemplate, List<ProducerRecord<String, String>> records) {
-        for(ProducerRecord<String, String> record : records){
-            kafkaTemplate.send(record);
         }
     }
 

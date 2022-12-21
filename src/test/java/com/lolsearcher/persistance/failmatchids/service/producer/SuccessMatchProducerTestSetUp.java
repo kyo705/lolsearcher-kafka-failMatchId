@@ -20,6 +20,8 @@ public class SuccessMatchProducerTestSetUp {
 
     protected static List<Match> consumeSuccessMatches() {
 
+        List<Match> answer = new ArrayList<>();
+
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "success_match_group");
@@ -33,9 +35,8 @@ public class SuccessMatchProducerTestSetUp {
 
         KafkaConsumer<String, Match> kafkaConsumer = new KafkaConsumer<>(properties);
 
-        List<Match> answer = new ArrayList<>();
-
         kafkaConsumer.subscribe(List.of("success_match"));
+
         ConsumerRecords<String, Match> records = kafkaConsumer.poll(Duration.ofSeconds(5));
         for(ConsumerRecord<String, Match> record : records){
             answer.add(record.value());
