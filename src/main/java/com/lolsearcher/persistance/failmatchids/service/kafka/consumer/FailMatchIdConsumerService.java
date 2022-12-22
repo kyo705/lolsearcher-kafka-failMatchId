@@ -6,7 +6,6 @@ import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMa
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -30,34 +29,29 @@ public class FailMatchIdConsumerService {
             groupId = "${app.kafka.consumers.filtered_fail_match.group_id}",
             containerFactory = "${app.kafka.consumers.filtered_fail_match.container_factory}"
     )
-    public void processFailMatchIds(
-            ConsumerRecords<String, String> failMatchIdRecords,
-            Acknowledgment acknowledgment
-    ) {
+    public void processFailMatchIds(ConsumerRecord<String, String> failMatchIdRecord, Acknowledgment acknowledgment) {
 
-        for(ConsumerRecord<String, String> failMatchIdRecord : failMatchIdRecords){
-            String failMatchId = failMatchIdRecord.value();
-            try{
-                Match successMatch = riotGamesApiService.requestMatch(failMatchId);
+        String failMatchId = failMatchIdRecord.value();
+        try{
+            Match successMatch = riotGamesApiService.requestMatch(failMatchId);
 
-                ProducerRecord<String, Match> successMatchRecord
-                        = successMatchProducerService.createProducerRecord(successMatch);
+            ProducerRecord<String, Match> successMatchRecord
+                    = successMatchProducerService.createProducerRecord(successMatch);
 
-                successMatchProducerService.send(successMatchRecord); //send 실패시 해당 서비스 트랜잭션 롤백
-                acknowledgment.acknowledge();
+            successMatchProducerService.send(successMatchRecord); //send 실패시 해당 서비스 트랜잭션 롤백
+            acknowledgment.acknowledge();
 
-            }catch (WebClientResponseException e){
-                if(e.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS){
-                    throw e;
-                }
-                try {
-                    Thread.sleep(2*60*1000);
-                } catch (InterruptedException ex) {
-                    log.error(ex.getMessage());
-                }
-            }catch (Exception e){
-                log.error(e.getMessage());
+        }catch (WebClientResponseException e){
+            if(e.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS){
+                throw e;
             }
+            try {
+                Thread.sleep(2*60*1000);
+            } catch (InterruptedException ex) {
+                log.error(ex.getMessage());
+            }
+        }catch (Exception e){
+            log.error(e.getMessage());
         }
     }
 }

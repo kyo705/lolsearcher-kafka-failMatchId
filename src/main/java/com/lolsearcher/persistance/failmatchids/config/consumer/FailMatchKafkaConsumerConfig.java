@@ -43,16 +43,12 @@ public class FailMatchKafkaConsumerConfig {
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> failMatchIdsContainerFactory(){
-        //컨슈머 팩토리 생성
-        Map<String, Object> properties = createConsumerProperties();
-        DefaultKafkaConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(properties);
 
-        //리스너컨테이너 팩토리 생성
         ConcurrentKafkaListenerContainerFactory<String, String> listenerFactory = new ConcurrentKafkaListenerContainerFactory<>();
 
-        listenerFactory.setConsumerFactory(consumerFactory);
+        listenerFactory.setConsumerFactory(failMatchIdsConsumerFactory());
         listenerFactory.setConcurrency(CONCURRENCY_COUNT);
-        listenerFactory.setBatchListener(true);
+        listenerFactory.setBatchListener(false); //컨슈머 레코드 하나씩 처리하는 전략 선택 => 중요한 데이터이기 때문
 
         listenerFactory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         listenerFactory.getContainerProperties().setConsumerRebalanceListener(createRebalanceListener());
@@ -60,8 +56,10 @@ public class FailMatchKafkaConsumerConfig {
         return listenerFactory;
     }
 
-    private Map<String, Object> createConsumerProperties() {
+    private DefaultKafkaConsumerFactory<String, String> failMatchIdsConsumerFactory() {
+
         Map<String, Object> properties = new HashMap<>();
+
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -72,10 +70,12 @@ public class FailMatchKafkaConsumerConfig {
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, SESSION_TIME_OUT_MS);
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, AUTO_OFFSET_RESET);
 
-        return properties;
+        return new DefaultKafkaConsumerFactory<>(properties);
     }
 
+
     private ConsumerAwareRebalanceListener createRebalanceListener(){
+        //noinspection NullableProblems
         return new ConsumerAwareRebalanceListener() {
             @Override
             public void onPartitionsRevokedBeforeCommit(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
