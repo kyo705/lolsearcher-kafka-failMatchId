@@ -8,29 +8,5 @@ app:
           brokers:
             broker1:
               server: localhost:9092
-    topics:
-      filtered_fail_match:
-        name: filtered_fail_match_id
-        replica: 1
-        partitions: 1
-      success_match:
-        name: success_match
-        replica: 1
-        partitions: 1
-    producers:
-      success_match:
-        transaction_id: success_match
-        ack: all
-    consumers:
-      filtered_fail_match:
-        container_factory: failMatchIdsContainerFactory
-        group_id: filtered_fail_match_id_group
-        poll_record_size: 100  # riot api 요청 제한 횟수가 2분당 최대 100회
-        heartbeat: 2000
-        session_time_out: 122000 # 2min + heartbeat time
-        isolation: read_committed
-        auto_offset_reset: earliest
-        enable_auto_commit: false
   riot_games:
     token_key: ${api_key}
-    match_id_uri: https://asia.api.riotgames.com

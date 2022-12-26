@@ -1,10 +1,10 @@
 package com.lolsearcher.persistance.failmatchids.service.kafka.producer;
 
+import com.lolsearcher.persistance.failmatchids.constant.SuccessMatchTopicConstants;
 import com.lolsearcher.persistance.failmatchids.model.entity.match.Match;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaProducerException;
 import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,14 +20,12 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class SuccessMatchProducerService implements producerRecordService<String, Match> {
 
-    @Value("${app.kafka.topics.success_match.name}")
-    private String TOPIC_NAME;
     private final KafkaTemplate<String, Match> successMatchTemplate;
 
     @Transactional(transactionManager = "kafkaTransactionManager")
     public void send(ProducerRecord<String, Match> successMatchRecord) throws ExecutionException, InterruptedException {
 
-        if(!successMatchRecord.topic().equals(TOPIC_NAME)){
+        if(!successMatchRecord.topic().equals(SuccessMatchTopicConstants.TOPIC_NAME)){
             throw new IllegalArgumentException("토픽명이 올바르지 않습니다.");
         }
 
@@ -41,17 +39,17 @@ public class SuccessMatchProducerService implements producerRecordService<String
 
     @Override
     public ProducerRecord<String, Match> createProducerRecord(Match value){
-        return new ProducerRecord<>(TOPIC_NAME, value);
+        return new ProducerRecord<>(SuccessMatchTopicConstants.TOPIC_NAME, value);
     }
 
     @Override
     public ProducerRecord<String, Match> createProducerRecord(String key, Match value){
-        return new ProducerRecord<>(TOPIC_NAME, key, value);
+        return new ProducerRecord<>(SuccessMatchTopicConstants.TOPIC_NAME, key, value);
     }
 
     @Override
     public ProducerRecord<String, Match> createProducerRecord(int partition, String key, Match value){
-        return new ProducerRecord<>(TOPIC_NAME, partition, key, value);
+        return new ProducerRecord<>(SuccessMatchTopicConstants.TOPIC_NAME, partition, key, value);
     }
 
 
@@ -61,13 +59,15 @@ public class SuccessMatchProducerService implements producerRecordService<String
             @Override
             public void onSuccess(SendResult<String, Match> result) {
                 log.info("TOPIC_NAME : '{}'에 MATCH : '{}' 적재 성공",
-                        TOPIC_NAME, result.getProducerRecord().value().getMatchId());
+                        SuccessMatchTopicConstants.TOPIC_NAME,
+                        result.getProducerRecord().value().getMatchId());
             }
 
             @Override
             public void onFailure(KafkaProducerException ex) {
                 log.error("TOPIC_NAME : '{}'에 MATCH : '{}' 적재 실패",
-                        TOPIC_NAME, ((Match) ex.getFailedProducerRecord().value()).getMatchId());
+                        SuccessMatchTopicConstants.TOPIC_NAME,
+                        ((Match) ex.getFailedProducerRecord().value()).getMatchId());
             }
         };
     }
