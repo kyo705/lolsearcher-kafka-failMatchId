@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class BanDto {
-    int championId;
-    int pickTurn;
+    private int championId;
+    private int pickTurn;
 }

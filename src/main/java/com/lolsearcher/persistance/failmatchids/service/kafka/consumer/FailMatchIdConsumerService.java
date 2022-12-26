@@ -1,5 +1,8 @@
 package com.lolsearcher.persistance.failmatchids.service.kafka.consumer;
 
+import com.lolsearcher.persistance.failmatchids.constant.FailMatchIdConsumerConstants;
+import com.lolsearcher.persistance.failmatchids.constant.FailMatchIdTopicConstants;
+import com.lolsearcher.persistance.failmatchids.constant.RiotGamesConstants;
 import com.lolsearcher.persistance.failmatchids.model.entity.match.Match;
 import com.lolsearcher.persistance.failmatchids.service.api.RiotGamesApiService;
 import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMatchProducerService;
@@ -25,9 +28,10 @@ public class FailMatchIdConsumerService {
      * 해당 애플리케이션 시작점
      */
     @KafkaListener(
-            topics = {"${app.kafka.topics.filtered_fail_match.name}"},
-            groupId = "${app.kafka.consumers.filtered_fail_match.group_id}",
-            containerFactory = "${app.kafka.consumers.filtered_fail_match.container_factory}"
+            topics = {FailMatchIdTopicConstants.TOPIC_NAME},
+            id = FailMatchIdConsumerConstants.LISTENER_ID,
+            groupId = FailMatchIdConsumerConstants.GROUP_ID,
+            containerFactory = FailMatchIdConsumerConstants.LISTENER_CONTAINER_FACTORY_NAME
     )
     public void processFailMatchIds(ConsumerRecord<String, String> failMatchIdRecord, Acknowledgment acknowledgment) {
 
