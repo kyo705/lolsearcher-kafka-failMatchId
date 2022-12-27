@@ -4,20 +4,21 @@ import com.lolsearcher.persistance.failmatchids.constant.FailMatchIdConsumerCons
 import com.lolsearcher.persistance.failmatchids.constant.FailMatchIdTopicConstants;
 import com.lolsearcher.persistance.failmatchids.constant.RiotGamesConstants;
 import com.lolsearcher.persistance.failmatchids.model.entity.match.Match;
+import com.lolsearcher.persistance.failmatchids.scheduler.info.Timer;
+import com.lolsearcher.persistance.failmatchids.scheduler.job.ConsumerResumeJob;
 import com.lolsearcher.persistance.failmatchids.service.api.RiotGamesApiService;
 import com.lolsearcher.persistance.failmatchids.service.kafka.producer.SuccessMatchProducerService;
+import com.lolsearcher.persistance.failmatchids.service.schedule.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.quartz.SchedulerException;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import static java.util.Objects.requireNonNull;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,7 +27,8 @@ public class FailMatchIdConsumerService {
 
     private final RiotGamesApiService riotGamesApiService;
     private final SuccessMatchProducerService successMatchProducerService;
-    private final KafkaListenerEndpointRegistry registry;
+    private final SchedulerService schedulerService;
+    private final ConsumerWorkService consumerWorkService;
 
     /**
      * 해당 애플리케이션 시작점
@@ -53,26 +55,39 @@ public class FailMatchIdConsumerService {
             handleWebClientResponseException(e);
         }catch (Exception e){
             log.error(e.getMessage());
-            requireNonNull(registry.getListenerContainer(FailMatchIdConsumerConstants.LISTENER_ID)).destroy();
+            consumerWorkService.destroy(FailMatchIdConsumerConstants.LISTENER_ID);
         }
     }
 
     private void handleWebClientResponseException(WebClientResponseException e) {
 
+        String listenerId = FailMatchIdConsumerConstants.LISTENER_ID;
+
         if(e.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS){
             log.error(e.getMessage());
-            requireNonNull(registry.getListenerContainer(FailMatchIdConsumerConstants.LISTENER_ID)).destroy();
+            consumerWorkService.destroy(listenerId);
         }
 
         try {
-            requireNonNull(registry.getListenerContainer(FailMatchIdConsumerConstants.LISTENER_ID)).pause();
+            consumerWorkService.pause(listenerId);
 
-            Thread.sleep(RiotGamesConstants.REQUEST_WAIT_MS);
+            //2분 뒤 resume 메소드 실행해주는 스케줄러 호출
+            callSchedulerService();
 
-            requireNonNull(registry.getListenerContainer(FailMatchIdConsumerConstants.LISTENER_ID)).resume();
-        } catch (InterruptedException ex) {
+        } catch (SchedulerException ex) {
             log.error(ex.getMessage());
-            requireNonNull(registry.getListenerContainer(FailMatchIdConsumerConstants.LISTENER_ID)).destroy();
+            consumerWorkService.destroy(listenerId);
         }
+    }
+
+    private void callSchedulerService() throws SchedulerException {
+
+        Timer timer = new Timer();
+        timer.setRunForever(false);
+        timer.setInitialOffsetMs(RiotGamesConstants.REQUEST_WAIT_MS);
+        timer.setTotalFireCount(1);
+        timer.setCallbackData(FailMatchIdConsumerConstants.LISTENER_ID);
+
+        schedulerService.schedule(ConsumerResumeJob.class, timer);
     }
 }
