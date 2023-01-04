@@ -25,11 +25,14 @@
 >   - 프레임 워크 : SpringBoot
 >   - 빌드 관리 툴 : Gradle
 >   - REST API 수집 : WebClient
+>   - 스케줄러 : Spring Quartz
 > - DevOps
 >   - MessageQueue : Kafka
 
 ## 기능 요구 사항
 > 1. MessageQueue로부터 실패한 매치 Id들을 가져옴
 > 2. 가져온 Fail Match Ids를 통해 RIOT 게임 서버로부터 Match 데이터를 요청함
-> 3. 응답이 성공한 Match 데이터와 실패한 MatchIds를 MessageQueue에 저장함
-> 4. 1~3번까지 과정을 계속 반복
+> 3. 응답이 성공한 Match 데이터를 MessageQueue에 저장함
+> 4. REST API 응답 실패 시 상태 코드에 따라 적절한 예외 처리   
+> 4-1. 429 ERROR 일 경우 해당 컨슈머를 pause하고 2분 후 resume하여 다시 요청 시도   
+> 4-2. 다른 예외일 경우 해당 컨슈머를 컨슈머 그룹에서 제거

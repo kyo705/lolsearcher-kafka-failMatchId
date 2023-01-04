@@ -45,7 +45,6 @@ public class FailMatchIdConsumerConfig {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, FailMatchIdConsumerConstants.POLL_RECORDS_COUNT);
-        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, FailMatchIdConsumerConstants.ISOLATION_LEVEL);
         properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, FailMatchIdConsumerConstants.AUTO_OFFSET_COMMIT);
         properties.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, FailMatchIdConsumerConstants.HEARTBEAT_MS);
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, FailMatchIdConsumerConstants.SESSION_TIME_OUT_MS);

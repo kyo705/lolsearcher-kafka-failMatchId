@@ -13,8 +13,6 @@ public class FailMatchIdConsumerConstants {
 
     public static final String AUTO_OFFSET_RESET = "earliest";
 
-    public static final String ISOLATION_LEVEL = "read_committed";
-
     public static final int POLL_RECORDS_COUNT = 100; /* riot api 요청 제한 횟수가 2분당 최대 100회 */
 
     public static final int HEARTBEAT_MS = 2000;

@@ -9,8 +9,6 @@ public class SuccessMatchProducerConstants {
 
     public static final  String ACK_MODE = "all";
 
-    public static final  String TRANSACTION_ID = "success_match";
-
     public static final  String COMPRESSION_TYPE = CompressionType.ZSTD.name;
 
     public static final boolean IDEMPOTENCE = true;

@@ -10,7 +10,6 @@ import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
@@ -22,18 +21,15 @@ public class SuccessMatchProducerService implements producerRecordService<String
 
     private final KafkaTemplate<String, Match> successMatchTemplate;
 
-    @Transactional(transactionManager = "kafkaTransactionManager")
     public void send(ProducerRecord<String, Match> successMatchRecord) throws ExecutionException, InterruptedException {
 
         if(!successMatchRecord.topic().equals(SuccessMatchTopicConstants.TOPIC_NAME)){
             throw new IllegalArgumentException("토픽명이 올바르지 않습니다.");
         }
 
-        KafkaSendCallback<String, Match> callback = successMatchSendCallback();
-
         ListenableFuture<SendResult<String, Match>> future = successMatchTemplate.send(successMatchRecord);
 
-        future.addCallback(callback);
+        future.addCallback(successMatchSendCallback());
         future.get();
     }
 
